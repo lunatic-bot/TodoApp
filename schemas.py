@@ -21,7 +21,11 @@ class TodoResponse(TodoBase):
     class Config:
         orm_mode = True
 
-class TodoItem(TodoBase):
+class TodoItem(BaseModel):
+    id: int
+    title: str
+    description: str
+    completed: bool
     creation_time: datetime
     completion_time: Optional[datetime] = None
 

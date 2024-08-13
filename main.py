@@ -5,10 +5,26 @@ from database import init_db, get_db
 from crud import get_todo_by_id, get_todos, create_todo, update_todo, delete_todo
 from schemas import TodoItem, TodoResponse, TodoCreate, TodoUpdate
 
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.requests import Request
+
 app = FastAPI()
+
+# Set up templates
+templates = Jinja2Templates(directory="templates")
 
 # Initialize the database
 init_db()
+
+
+
+@app.get("/", response_class=HTMLResponse)
+def read_todos(request: Request, db: Session = Depends(get_db)):
+    todos = db.query(TodoItem).all()
+    return templates.TemplateResponse("index.html", {"request": request, "todos": todos})
+
 
 # main.py
 @app.post("/todos/", response_model=TodoResponse)
