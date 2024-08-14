@@ -3,7 +3,8 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import init_db, get_db
 from crud import get_todo_by_id, get_todos, create_todo, update_todo, delete_todo
-from schemas import TodoItem, TodoResponse, TodoCreate, TodoUpdate
+from schemas import TodoResponse, TodoCreate, TodoUpdate
+from models import TodoItem
 
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse

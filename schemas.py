@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import datetime
 
 class TodoBase(BaseModel):
-    id: int
     title: str
     description: str
     completed: bool = False
@@ -11,25 +10,21 @@ class TodoBase(BaseModel):
 class TodoCreate(TodoBase):
     pass
 
-class TodoUpdate(TodoBase):
-    pass
+class TodoUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    completed: Optional[bool] = None
 
 class TodoResponse(TodoBase):
-    creation_time: datetime
-    completion_time: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
-
-class TodoItem(BaseModel):
     id: int
-    title: str
-    description: str
-    completed: bool
     creation_time: datetime
     completion_time: Optional[datetime] = None
 
     class Config:
         orm_mode = True
+
+# TodoItem can be an alias for TodoResponse if both represent the same data structure.
+TodoItem = TodoResponse
+
 
 
