@@ -11,6 +11,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request
 
+from fastapi import FastAPI, Request, Form, Depends
+from fastapi.responses import RedirectResponse
+
+
 app = FastAPI()
 
 # Set up templates
@@ -28,9 +32,32 @@ def read_todos(request: Request, db: Session = Depends(get_db)):
 
 
 # main.py
-@app.post("/todos/", response_model=TodoResponse)
-def create_todo_endpoint(todo: TodoCreate, db: Session = Depends(get_db)):
-    return create_todo(db=db, title=todo.title, description=todo.description)
+# @app.post("/todos/add-todo", response_model=TodoResponse)
+# def create_todo_endpoint(todo: TodoCreate, db: Session = Depends(get_db)):
+#     return create_todo(db=db, title=todo.title, description=todo.description)
+
+
+@app.post("/todos/add-todo")
+async def add_todo(title: str = Form(...), description: str = Form(...), db: Session = Depends(get_db)):
+    # Create a new Todo object
+    # new_todo = TodoCreate(
+    #     title=title,
+    #     description=description,
+    #     completed=False
+    # )
+    
+    # Add to the database
+    # db.add(new_todo)
+    # db.commit()
+    # db.refresh(new_todo)
+    db_todo = create_todo(db=db, title=title, description=description)
+    if db_todo is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    # Redirect to the home page
+    return RedirectResponse(url="/", status_code=303)
+
+
 
 @app.get("/todos/{todo_id}", response_model=TodoResponse)
 def read_todo(todo_id: int, db: Session = Depends(get_db)):
@@ -38,6 +65,7 @@ def read_todo(todo_id: int, db: Session = Depends(get_db)):
     if db_todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
     return db_todo
+
 
 @app.get("/todos/", response_model=list[TodoResponse])
 def read_todos(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
@@ -57,3 +85,8 @@ def delete_todo_endpoint(todo_id: int, db: Session = Depends(get_db)):
     if db_todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
     return db_todo
+
+
+@app.get("/about")
+def get_about(request : Request):
+    return templates.TemplateResponse("about.html", {"request": request})
