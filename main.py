@@ -2,7 +2,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import init_db, get_db
-from crud import get_todo_by_id, get_todos, create_todo, update_todo, delete_todo
+from crud import get_todo_by_id, get_todos, create_todo, update_todo, delete_todo, toggle_todo_completed_status
 from schemas import TodoResponse, TodoCreate, TodoUpdate
 from models import TodoItem
 
@@ -19,6 +19,9 @@ app = FastAPI()
 
 # Set up templates
 templates = Jinja2Templates(directory="templates")
+
+# Mount the static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Initialize the database
 init_db()
@@ -37,29 +40,21 @@ def read_todos(request: Request, db: Session = Depends(get_db)):
 #     return create_todo(db=db, title=todo.title, description=todo.description)
 
 
-@app.post("/todos/add-todo")
-async def add_todo(title: str = Form(...), description: str = Form(...), db: Session = Depends(get_db)):
-    # Create a new Todo object
-    # new_todo = TodoCreate(
-    #     title=title,
-    #     description=description,
-    #     completed=False
-    # )
-    
-    # Add to the database
-    # db.add(new_todo)
-    # db.commit()
-    # db.refresh(new_todo)
-    db_todo = create_todo(db=db, title=title, description=description)
+@app.post("/todos/add-todo", tags=["Todos"])
+async def add_todo(request: Request, todo: TodoCreate, db: Session = Depends(get_db)):
+    db_todo = create_todo(db=db, title=todo.title, description=todo.description)
     if db_todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
     
+    return db_todo
+    
+    # return templates.TemplateResponse("index.html", {"request": request, "todo": db_todo})
     # Redirect to the home page
-    return RedirectResponse(url="/", status_code=303)
+    # return RedirectResponse(url="/", status_code=303)
 
 
 
-@app.get("/todos/{todo_id}", response_model=TodoResponse)
+@app.get("/todos/get-todo/{todo_id}", response_model=TodoResponse, tags=["Todos"])
 def read_todo(todo_id: int, db: Session = Depends(get_db)):
     db_todo = get_todo_by_id(db, todo_id)
     if db_todo is None:
@@ -67,19 +62,21 @@ def read_todo(todo_id: int, db: Session = Depends(get_db)):
     return db_todo
 
 
-@app.get("/todos/", response_model=list[TodoResponse])
+@app.get("/todos", response_model=list[TodoResponse], tags=["Todos"])
 def read_todos(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     todos = get_todos(db, skip=skip, limit=limit)
     return todos
 
-@app.put("/todos/{todo_id}", response_model=TodoResponse)
+
+@app.put("/todos/update-todo/{todo_id}", response_model=TodoResponse, tags=["Todos"])
 def update_todo_endpoint(todo_id: int, todo: TodoUpdate, db: Session = Depends(get_db)):
     db_todo = update_todo(db, todo_id, title=todo.title, description=todo.description, completed=todo.completed)
     if db_todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
     return db_todo
 
-@app.delete("/todos/{todo_id}", response_model=TodoResponse)
+
+@app.delete("/todos/delete-todo/{todo_id}", response_model=TodoResponse, tags=["Todos"])
 def delete_todo_endpoint(todo_id: int, db: Session = Depends(get_db)):
     db_todo = delete_todo(db, todo_id)
     if db_todo is None:
@@ -87,6 +84,15 @@ def delete_todo_endpoint(todo_id: int, db: Session = Depends(get_db)):
     return db_todo
 
 
-@app.get("/about")
+@app.put("/todos/toggle-complete/{todo_id}", response_model=TodoResponse, tags=["Todos"])
+def toggle_todo_completion(todo_id: int, db: Session = Depends(get_db)):
+    db_todo = toggle_todo_completed_status(db, todo_id)
+    if db_todo is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return db_todo
+
+
+
+@app.get("/about", tags=["About"])
 def get_about(request : Request):
     return templates.TemplateResponse("about.html", {"request": request})
