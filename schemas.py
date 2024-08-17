@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, EmailStr
+from typing import Optional, List
 from datetime import datetime
 
 class TodoBase(BaseModel):
@@ -16,6 +16,7 @@ class TodoUpdate(BaseModel):
 
 class TodoResponse(TodoBase):
     id: int
+    user_id: int
     creation_time: datetime
     completion_time: Optional[datetime] = None
 
@@ -24,6 +25,30 @@ class TodoResponse(TodoBase):
 
 # TodoItem can be an alias for TodoResponse if both represent the same data structure.
 TodoItem = TodoResponse
+
+
+
+
+## schemas for user creation
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+# Schema for user response after successful sign-up or retrieval
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    creation_time: datetime
+
+    class Config:
+        orm_mode = True
+
+# Schema for login response with JWT token
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 
 

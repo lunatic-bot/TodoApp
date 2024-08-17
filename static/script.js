@@ -1,3 +1,20 @@
+// document.getElementById('todoForm').addEventListener('submit', function(event){
+//     event.preventDefault();
+//     const formData = new FormData(this);
+
+//     fetch('/todos/add-todo',{
+//         method: 'POST',
+//         body:formData
+//     })
+//     .then(response => response.json())
+//     .then(data => {
+//         console.log(data.message);
+//         window.location.reload();
+//     })
+//     .catch(error => {
+//         console.error("Error:", error)
+//     })
+// });
 
 document.getElementById('todoForm').addEventListener('submit', async function(event) {
     event.preventDefault(); // Prevent the form from submitting the traditional way
@@ -9,24 +26,29 @@ document.getElementById('todoForm').addEventListener('submit', async function(ev
         description: formData.get('description')
     };
 
+    // Get the authentication token
+    const token = localStorage.getItem('access_token'); // Adjust based on how you store the token
+    console.log('Token:', token);
     try {
         // Send a POST request to the server
         const response = await fetch('/todos/add-todo', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` // Include the token in the Authorization header
             },
             body: JSON.stringify(data)
         });
 
         if (response.ok) {
             // Handle successful response
-            // alert('Todo added successfully!');
-            window.location.reload();
+            alert('Todo added successfully!');
+            window.location.reload(); // Reload to reflect changes
             this.reset(); // Reset the form
         } else {
             // Handle errors
-            alert('Failed to add todo.');
+            const errorData = await response.json();
+            alert(`Failed to add todo: ${errorData.detail || 'Unknown error'}`);
         }
     } catch (error) {
         // Handle network errors
@@ -34,6 +56,8 @@ document.getElementById('todoForm').addEventListener('submit', async function(ev
         alert('An error occurred while adding the todo.');
     }
 });
+
+
 
 
 
@@ -131,6 +155,4 @@ function updateTodo(todoId) {
         alert('An error occurred while updating the todo.');
     });
 }
-
-
 

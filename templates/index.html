@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Todo List{% endblock %}
+{% block title %}TodoApp{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Todo List</h1>
+<h1 class="mb-4">My Todos</h1>
 <div class="row">
     <div class="col-md-8">
         {% for todo in todos %}
@@ -73,6 +73,41 @@
             </div>
         </div>
         {% endfor %}
+
+        <!-- Pagination Controls -->
+        <nav aria-label="Todo pagination">
+            <ul class="pagination justify-content-center">
+                {% if skip > 0 %}
+                <li class="page-item">
+                    <a class="page-link" href="?skip={{ skip - limit }}&limit={{ limit }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+                {% endif %}
+
+                {% for i in range(0, total, limit) %}
+                <li class="page-item {% if i == skip %}active{% endif %}">
+                    <a class="page-link" href="?skip={{ i }}&limit={{ limit }}">{{ (i // limit) + 1 }}</a>
+                </li>
+                {% endfor %}
+
+                {% if skip + limit < total %}
+                <li class="page-item">
+                    <a class="page-link" href="?skip={{ skip + limit }}&limit={{ limit }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
 
     <div class="col-md-4">

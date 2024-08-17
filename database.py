@@ -1,7 +1,10 @@
 # database.py
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base
+# from models import Base
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"  # Path to your SQLite database file
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
