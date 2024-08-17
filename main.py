@@ -70,7 +70,8 @@ def read_todos(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
 
 @app.put("/todos/update-todo/{todo_id}", response_model=TodoResponse, tags=["Todos"])
 def update_todo_endpoint(todo_id: int, todo: TodoUpdate, db: Session = Depends(get_db)):
-    db_todo = update_todo(db, todo_id, title=todo.title, description=todo.description, completed=todo.completed)
+    db_todo = update_todo(db, todo_id, title=todo.title, description=todo.description)
+    print("Todo was updated.")
     if db_todo is None:
         raise HTTPException(status_code=404, detail="Todo not found")
     return db_todo
@@ -86,9 +87,17 @@ def delete_todo_endpoint(todo_id: int, db: Session = Depends(get_db)):
 
 @app.put("/todos/toggle-complete/{todo_id}", response_model=TodoResponse, tags=["Todos"])
 def toggle_todo_completion(todo_id: int, db: Session = Depends(get_db)):
+    # db_todo = toggle_todo_completed_status(db, todo_id)
+    # if db_todo is None:
+    #     raise HTTPException(status_code=404, detail="Todo not found")
+    # return db_todo
+    print(f"Received request to toggle completion status for todo ID: {todo_id}")
     db_todo = toggle_todo_completed_status(db, todo_id)
     if db_todo is None:
+        print(f"Todo with ID {todo_id} not found.")
         raise HTTPException(status_code=404, detail="Todo not found")
+    
+    print(f"Todo with ID {todo_id} status toggled successfully.")
     return db_todo
 
 

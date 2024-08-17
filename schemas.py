@@ -13,7 +13,6 @@ class TodoCreate(TodoBase):
 class TodoUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    completed: Optional[bool] = None
 
 class TodoResponse(TodoBase):
     id: int

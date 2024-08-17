@@ -14,7 +14,7 @@
             <div class="card-body">
                 <p class="card-text">{{ todo.description }}</p>
                 <p><strong>Created at:</strong> {{ todo.creation_time }}</p>
-                <p><strong>Completed:</strong> {{ 'Yes' if todo.completed else 'No' }}</p>
+                <!-- <p><strong>Completed:</strong> {{ 'Yes' if todo.completed else 'No' }}</p> -->
                 {% if todo.completed %}
                 <p><strong>Completed at:</strong> {{ todo.completion_time }}</p>
                 {% endif %}
@@ -23,8 +23,10 @@
                 <div class="d-flex justify-content-start mt-3">
                     <!-- Toggle Complete Button -->
                     <form class="mr-2">
-                        <button type="submit" class="btn btn-outline-{{ 'success' if todo.completed else 'danger' }}" onclick="toggleComplete({{ todo.id }})">
-                            {{ '☑️' if todo.completed else '⬜' }} Complete
+                        <button type="button" 
+                            class="btn {{ 'btn-success' if todo.completed else 'btn-danger' }} toggle-complete-btn" 
+                            data-todo-id="{{ todo.id }}">
+                            {{ '☑️ ' if todo.completed else '⬜ ' }} 
                         </button>
                     </form>
                     
@@ -32,17 +34,12 @@
                     <button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#updateTodoModal{{ todo.id }}">
                         ✏️ Update
                     </button>
-
+                    
                     <!-- Delete Button -->
                     <form class="mr-2">
-                        <!-- <button type="submit" class="btn btn-outline-danger">
-                            🗑️ Delete
-                        </button> -->
-                        <!-- Delete Button -->
                         <button class="btn btn-outline-danger" onclick="deleteTodo({{ todo.id }})">
                         🗑️ Delete
                         </button>
-
                     </form>
                 </div>
             </div>
@@ -58,8 +55,9 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form action="/todos/update-todo/{{ todo.id }}" method="post">
-                        <div class="modal-body">
+                    <div class="modal-body">
+                        <!-- Update Form -->
+                        <form id="updateTodoForm{{ todo.id }}">
                             <div class="form-group">
                                 <label for="updateTitle{{ todo.id }}">Title</label>
                                 <input type="text" class="form-control" id="updateTitle{{ todo.id }}" name="title" value="{{ todo.title }}" required>
@@ -68,12 +66,9 @@
                                 <label for="updateDescription{{ todo.id }}">Description</label>
                                 <textarea class="form-control" id="updateDescription{{ todo.id }}" name="description" rows="3" required>{{ todo.description }}</textarea>
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </form>
+                            <button type="button" class="btn btn-primary" onclick="updateTodo({{ todo.id }})">Save changes</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

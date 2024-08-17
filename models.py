@@ -1,7 +1,8 @@
 # models.py
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime, timezone
+from datetime import datetime
+from pytz import timezone 
 
 Base = declarative_base()
 
@@ -12,5 +13,5 @@ class TodoItem(Base):
     title = Column(String, index=True)
     description = Column(String)
     completed = Column(Boolean, default=False)
-    creation_time = Column(DateTime, default=datetime.now(timezone.utc))
+    creation_time = Column(DateTime, default=datetime.now(timezone("Asia/Kolkata")))
     completion_time = Column(DateTime, nullable=True)

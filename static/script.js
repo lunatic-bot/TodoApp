@@ -36,116 +36,6 @@ document.getElementById('todoForm').addEventListener('submit', async function(ev
 });
 
 
-// update toggle and delete button
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle toggle complete
-    // document.querySelectorAll('.toggle-complete-btn').forEach(button => {
-    //     button.addEventListener('click', async function() {
-    //         const todoItem = this.closest('.todo-item');
-    //         const todoId = todoItem.getAttribute('data-id');
-    //         const completed = todoItem.querySelector('.completed-status').innerText === 'Yes';
-            
-    //         try {
-    //             const response = await fetch(`/todos/toggle-complete/${todoId}`, {
-    //                 method: 'PATCH',
-    //                 headers: {
-    //                     'Content-Type': 'application/json'
-    //                 },
-    //                 body: JSON.stringify({ completed: !completed })
-    //             });
-
-    //             if (response.ok) {
-    //                 // Toggle the button color and completed status text
-    //                 todoItem.querySelector('.completed-status').innerText = completed ? 'No' : 'Yes';
-    //                 this.classList.toggle('btn-green');
-    //                 this.classList.toggle('btn-red');
-    //             } else {
-    //                 alert('Failed to toggle todo completion.');
-    //             }
-    //         } catch (error) {
-    //             console.error('Error:', error);
-    //             alert('An error occurred while toggling todo completion.');
-    //         }
-    //     });
-    // });
-
-    // Handle delete
-    // document.querySelectorAll('.delete-btn').forEach(button => {
-    //     button.addEventListener('click', async function() {
-    //         const todoItem = this.closest('.todo-item');
-    //         const todoId = todoItem.getAttribute('data-id');
-
-    //         try {
-    //             const response = await fetch(`/todos/delete_todo/${todoId}`, {
-    //                 method: 'DELETE'
-    //             });
-
-    //             if (response.ok) {
-    //                 todoItem.remove();
-    //             } else {
-    //                 alert('Failed to delete todo.');
-    //             }
-    //         } catch (error) {
-    //             console.error('Error:', error);
-    //             alert('An error occurred while deleting the todo.');
-    //         }
-    //     });
-    // });
-
-    // Handle update
-    document.querySelectorAll('.update-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const todoItem = this.closest('.todo-item');
-            const todoId = todoItem.getAttribute('data-id');
-            const title = todoItem.querySelector('strong').innerText;
-            const description = todoItem.querySelector('strong').nextSibling.textContent.trim();
-
-            // Populate the update form with the current todo details
-            document.getElementById('update-id').value = todoId;
-            document.getElementById('update-title').value = title;
-            document.getElementById('update-description').value = description;
-
-            // Show the update form
-            document.getElementById('update-form-container').style.display = 'block';
-        });
-    });
-
-    // Handle update form submission
-    document.getElementById('updateForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
-
-        const todoId = document.getElementById('update-id').value;
-        const data = {
-            title: document.getElementById('update-title').value,
-            description: document.getElementById('update-description').value
-        };
-
-        try {
-            const response = await fetch(`/todos/update_todo/${todoId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-                // Update the UI with the new details
-                const todoItem = document.querySelector(`.todo-item[data-id="${todoId}"]`);
-                todoItem.querySelector('strong').innerText = data.title;
-                todoItem.querySelector('strong').nextSibling.textContent = `: ${data.description}`;
-                document.getElementById('update-form-container').style.display = 'none';
-                alert('Todo updated successfully!');
-            } else {
-                alert('Failed to update todo.');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while updating the todo.');
-        }
-    });
-});
-
 
 function deleteTodo(todoId) {
     fetch(`/todos/delete-todo/${todoId}`, {
@@ -169,25 +59,78 @@ function deleteTodo(todoId) {
 }
 
 
-function toggleComplete(todoId) {
-    fetch(`/todos/toggle-complete/${todoId}`, {
-        method: 'PUT', // Ensure this matches the method expected by your route
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to toggle todo completion status
+    function toggleComplete(todoId, button) {
+        fetch(`/todos/toggle-complete/${todoId}`, {
+            method: 'PUT', // Ensure this matches the method expected by your route
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+                // Toggle button class and text based on the new state
+                if (button.classList.contains('btn-danger')) {
+                    button.classList.remove('btn-danger');
+                    button.classList.add('btn-success');
+                    button.innerHTML = '☑️';
+                } else {
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-danger');
+                    button.innerHTML = '⬜';
+                }
+            } else {
+                alert('Failed to update todo status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the todo status.');
+        });
+    }
+
+    // Attach the toggleComplete function to each button
+    document.querySelectorAll('.toggle-complete-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            toggleComplete(button.dataset.todoId, button);
+        });
+    });
+});
+
+
+// Function to handle the update operation
+function updateTodo(todoId) {
+    console.log(`Update button clicked for Todo ID: ${todoId}`); // Debugging line
+    const form = document.getElementById(`updateTodoForm${todoId}`);
+    const formData = new FormData(form);
+
+    fetch(`/todos/update-todo/${todoId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            title: formData.get('title'),
+            description: formData.get('description')
+        }),
         headers: {
             'Content-Type': 'application/json'
         }
     })
     .then(response => {
         if (response.ok) {
-            alert('Todo status updated successfully');
+            // alert('Todo updated successfully');
             window.location.reload(); // Reload the page to reflect changes
         } else {
-            alert('Failed to update todo status');
+            alert('Failed to update todo');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while updating the todo status.');
+        alert('An error occurred while updating the todo.');
     });
 }
+
 
 
