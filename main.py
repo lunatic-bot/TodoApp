@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from database import init_db, get_db
 import crud
@@ -25,6 +25,12 @@ from passlib.context import CryptContext
 
 from auth import verify_password, get_password_hash
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+import pandas as pd
+from io import StringIO
 
 
 
@@ -153,31 +159,6 @@ def get_login_page(request: Request):
 
 
 
-
-# @app.post("/token", response_model=Token)
-# def login_for_access_token(
-#     form_data: OAuth2PasswordRequestForm = Depends(),
-#     db: Session = Depends(get_db)
-# ):
-#     user = crud.authenticate_user(db, form_data.username, form_data.password)
-#     if not user:
-#         print("Login failed: Incorrect username or password")
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail="Incorrect username or password",
-#             headers={"WWW-Authenticate": "Bearer"},
-#         )
-    
-#     print(user.email, form_data.password)
-#     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-#     access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
-
-#     print("Access token created:", access_token)
-#     response = RedirectResponse(url='/', status_code=status.HTTP_302_FOUND)
-#     response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
-#     print("Response was set.", response)
-#     return response
-#     # return {"access_token": access_token, "token_type": "bearer"}
 @app.post("/token", response_model=Token)
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -209,19 +190,29 @@ async def redirect_to_home(request: Request):
     # This endpoint handles redirection after setting the cookie
     return RedirectResponse(url='/')
 
-@app.get('/users/login')
+
+
+@app.get("/users/login")
 def get_login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})    
+    # Get the message from query parameters, if any
+    message = request.query_params.get("message", "")
+    return templates.TemplateResponse("login.html", {"request": request, "message": message})
+    # return templates.TemplateResponse("login.html", {"request": request})    
 
 
+# @app.get("/logout")
+# def logout(request: Request):
+#     response = RedirectResponse(url="/users/login")
+#     response.delete_cookie("access_token")  # Remove the access token cookie
+#     return response
+
+@app.get("/logout")
+def logout(request: Request):
+    response = RedirectResponse(url='/users/login?message=You%20have%20been%20logged%20out')
+    response.delete_cookie("access_token")
+    return response
 
 
-
-
-
-
-
-###################################################################
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -231,6 +222,10 @@ def read_todos(request: Request, skip: int = 0, limit: int = 10, db: Session = D
     # if isinstance(current_user, RedirectResponse):
     #     print("Current user : ", current_user)
     #     return current_user
+
+    if not current_user:
+        # Redirect to login page if not authenticated
+        return RedirectResponse(url='/users/login?message=Please%20log%20in%20to%20continue', status_code=302)
     
     user = crud.get_user_by_mail(db, email=current_user.email)
     todos, total_todos = crud.get_all_todos_for_user(db, skip, limit, user_id=user.id)
@@ -244,22 +239,6 @@ def read_todos(request: Request, skip: int = 0, limit: int = 10, db: Session = D
             'current_user': current_user
         })
 
-# @app.get("/", response_class=HTMLResponse)
-# def read_todos(request: Request, skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-#     # return {"request": Request, "status": "Success"}
-#     print("inside read todos : ", current_user)
-#     todos, total_todos = crud.get_all_todos_for_user(db, skip, limit, user_id=current_user.id)
-#     return templates.TemplateResponse("index.html", {
-#         "request": request,
-#         "todos": todos,
-#         "total": total_todos,
-#         "skip": skip,
-#         "limit": limit
-#     })
-
-# @app.get("/protected-endpoint")
-# def protected_endpoint(current_user: User = Depends(get_current_user)):
-#     return {"message": "You are authorized", "user": current_user.username}
 
 
 @app.post("/todos/add-todo", tags=["Todos"])
@@ -272,20 +251,6 @@ async def add_todo(request: Request, todo: TodoCreate, db: Session = Depends(get
     db_todo = crud.create_todo_for_user(db=db, todo=todo, user_id=current_user.id)
     return db_todo
 
-
-
-# @app.get("/todos/get-todo/{todo_id}", response_model=TodoResponse, tags=["Todos"])
-# def read_todo(todo_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-#     db_todo = get_todo_by_id(db, todo_id)
-#     if db_todo is None:
-#         raise HTTPException(status_code=404, detail="Todo not found")
-#     return db_todo
-
-
-# @app.get("/todos", response_model=list[TodoResponse], tags=["Todos"])
-# def read_todos(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-#     todos = get_todos(db, skip=skip, limit=limit)
-#     return todos
 
 
 @app.put("/todos/update-todo/{todo_id}", response_model=TodoResponse, tags=["Todos"])
@@ -320,3 +285,44 @@ def toggle_todo_completion(todo_id: int, db: Session = Depends(get_db)):
 @app.get("/about", tags=["About"])
 def get_about(request : Request):
     return templates.TemplateResponse("about.html", {"request": request})
+
+
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == status.HTTP_404_NOT_FOUND:
+        return HTMLResponse(content=templates.get_template('404.html').render(), status_code=status.HTTP_404_NOT_FOUND)
+    # return await request.app.default_exception_handler(request, exc)
+    return {"request": request, "exception": exc}
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return HTMLResponse(content="Invalid request", status_code=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+# @app.post("/todos/upload")
+# async def upload_todos(file: UploadFile = File(...), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+#     if not file.filename.endswith('.csv'):
+#         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+
+#     content = await file.read()
+#     df = pd.read_csv(StringIO(content.decode('utf-8')))
+    
+#     # Assuming the CSV has columns 'title' and 'description'
+#     for index, row in df.iterrows():
+#         title = row['title']
+#         description = row['description']
+#         user = current_user
+#         # Add todos to the user's account
+#         todo = TodoItem(
+#             title=title,
+#             description=description,
+#             user_id=user.id
+#         )
+#         db.add(todo)
+    
+#     db.commit()
+#     return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
