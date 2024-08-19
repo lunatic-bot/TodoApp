@@ -1,4 +1,5 @@
 
+import os
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from database import init_db, get_db
@@ -7,7 +8,7 @@ from schemas import TodoResponse, TodoCreate, TodoUpdate, UserCreate, UserRespon
 from models import TodoItem, User
 
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request
 
@@ -31,6 +32,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 import pandas as pd
 from io import StringIO
+import shutil
 
 
 
@@ -62,6 +64,32 @@ from fastapi.security import OAuth2PasswordBearer
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# class TokenMiddleware(BaseHTTPMiddleware):
+#     async def dispatch(self, request: Request, call_next):
+#         token = request.cookies.get("access_token")
+#         if token:
+#             try:
+#                 token = token.replace("Bearer ", "")
+#                 payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#                 request.state.user = payload.get("sub")
+#             except jwt.ExpiredSignatureError:
+#                 request.state.user = None
+#             except jwt.InvalidTokenError:
+#                 request.state.user = None
+#         else:
+#             request.state.user = None
+        
+#         try:
+#             response = await call_next(request)
+#         except Exception as e:
+#             # Log the exception and optionally return a response
+#             print(f"Error in call_next: {e}")
+#             response = JSONResponse(content={"detail": "Internal Server Error"}, status_code=500)
+#         # response = await call_next(request)
+#         return response
+
+# app.add_middleware(TokenMiddleware)
+
 class TokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         token = request.cookies.get("access_token")
@@ -74,14 +102,21 @@ class TokenMiddleware(BaseHTTPMiddleware):
                 request.state.user = None
             except jwt.InvalidTokenError:
                 request.state.user = None
+            except Exception as e:
+                request.state.user = None
+                print(f"Error decoding JWT: {e}")
         else:
             request.state.user = None
+
+        try:
+            response = await call_next(request)
+        except Exception as e:
+            print(f"Error in call_next: {e}")
+            response = JSONResponse(content={"detail": "Internal Server Error"}, status_code=500)
         
-        response = await call_next(request)
         return response
 
 app.add_middleware(TokenMiddleware)
-
 #####################################################################################
 def get_current_user(request: Request, db: Session = Depends(get_db)):
     print("GET CURRENT USER : ")
@@ -302,27 +337,71 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 
+upload_directory = r"C:\Users\atalb\Documents\Coding\FastAPI\ToDoApp\UploadedFiles"
 
-# @app.post("/todos/upload")
-# async def upload_todos(file: UploadFile = File(...), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-#     if not file.filename.endswith('.csv'):
-#         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+@app.post("/uploadfile")
+async def upload_file(file: UploadFile, current_user: User = Depends(get_current_user)):
+    uploadFilename = f"User_{current_user.id}_{file.filename}"
+    file_location = f"{upload_directory}/{uploadFilename}"
+    with open(file_location, "wb+") as file_object:
+        shutil.copyfileobj(file.file, file_object)
+    return {"info": f"file '{uploadFilename}' saved at '{file_location}'"}
 
-#     content = await file.read()
-#     df = pd.read_csv(StringIO(content.decode('utf-8')))
+
+
+
+
+@app.get("/todos/add-from-file")
+async def add_todos_from_file(
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    # Get the most recent file uploaded by the user (assuming only one file is uploaded at a time)
+    # user_filename = f"{current_user.id}_uploaded_file.csv"
+    # uploadFilename = f"User_{current_user.id}_{file.filename}"
+    userFile = None
+    UserFilePrefix = f"User_{current_user.id}"
+    for filename in os.listdir(upload_directory):
+        if filename.startswith(UserFilePrefix):
+            userFile = os.path.join(upload_directory, filename)
+            break
     
-#     # Assuming the CSV has columns 'title' and 'description'
-#     for index, row in df.iterrows():
-#         title = row['title']
-#         description = row['description']
-#         user = current_user
-#         # Add todos to the user's account
-#         todo = TodoItem(
-#             title=title,
-#             description=description,
-#             user_id=user.id
-#         )
-#         db.add(todo)
-    
-#     db.commit()
-#     return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+
+    # Check if the file exists
+    if not userFile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="No uploaded file found for the user"
+        )
+
+    # Read the file using pandas
+    try:
+        df = pd.read_csv(userFile)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=f"Error reading the file: {str(e)}"
+        )
+
+    # Validate the dataframe (assuming it has 'title' and 'description' columns)
+    if 'title' not in df.columns or 'description' not in df.columns:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="The file must contain 'title' and 'description' columns"
+        )
+
+    # Iterate over each row and create a Todo for the current user
+    for _, row in df.iterrows():
+        title=row['title'], 
+        description=row['description']
+        if title and description:
+            todo = TodoCreate(
+                title=title,
+                description=description
+            )
+
+            ## create todo
+            created_todo = crud.create_todo_for_user(db=db, todo=todo, user_id=current_user.id)         
+
+    # return JSONResponse(content={"status":"Todos added from file"}, status_code=200)
+    return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)

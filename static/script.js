@@ -156,3 +156,274 @@ function updateTodo(todoId) {
     });
 }
 
+
+// document.addEventListener('DOMContentLoaded', function () { 
+//     const toggleFormBtn = document.getElementById('toggleFormBtn'); 
+//     const addTodoFormContainer = document.getElementById('addTodoFormContainer'); 
+//     const uploadFormContainer = document.getElementById('uploadFormContainer'); 
+//     const uploadBtn = document.getElementById('uploadBtn'); 
+//     const successMessage = document.getElementById('successMessage'); 
+//     const addTodosBtn = document.getElementById('addTodosBtn'); 
+
+//     // Toggle between forms
+//     toggleFormBtn.addEventListener('click', function () { 
+//         if (addTodoFormContainer.classList.contains('hidden')) { 
+//             addTodoFormContainer.classList.remove('hidden'); 
+//             uploadFormContainer.classList.add('hidden'); 
+//             toggleFormBtn.textContent = 'Upload from File'; 
+//         } else { 
+//             addTodoFormContainer.classList.add('hidden'); 
+//             uploadFormContainer.classList.remove('hidden'); 
+//             toggleFormBtn.textContent = 'Go back to form'; 
+//         } 
+//     }); 
+            
+//     // Upload file and show success message
+//     uploadBtn.addEventListener('click', function () { 
+//         const fileInput = document.getElementById('fileInput'); 
+//         const file = fileInput.files[0]; 
+        
+//         if (file) { 
+//             const formData = new FormData(); 
+//             formData.append('file', file); 
+            
+//             fetch('/uploadfile/', { 
+//                 method: 'POST', 
+//                 body: formData 
+//             }) 
+//             .then(response => {
+//                 if (!response.ok) {
+//                     throw new Error('Network response was not ok');
+//                 }
+//                 return response.json();
+//             })
+//             .then(data => { 
+//                 successMessage.classList.remove('hidden'); 
+//                 addTodosBtn.classList.remove('hidden'); 
+//             }) 
+//             .catch(error => { 
+//                 console.error('Error uploading file:', error); 
+//             }); 
+//         } else {
+//             alert("Please select a file to upload.");
+//         }
+//     }); 
+    
+//     // Add Todos from file
+//     addTodosBtn.addEventListener('click', function () { 
+//         fetch('/todos/add-from-file') 
+//         .then(response => {
+//             if (!response.ok) {
+//                 throw new Error('Network response was not ok');
+//             }
+//             return response.json();
+//         })
+//         .then(data => { 
+//             console.log(data.message); 
+//             window.location.reload(); // Reload the page to show the added todos
+//         }) 
+//         .catch(error => { 
+//             console.error('Error adding todos from file:', error); 
+//         }); 
+//     }); 
+// });
+
+
+
+// document.addEventListener('DOMContentLoaded', function () { 
+//     const toggleFormBtn = document.getElementById('toggleFormBtn'); 
+//     const addTodoFormContainer = document.getElementById('addTodoFormContainer'); 
+//     const uploadFormContainer = document.getElementById('uploadFormContainer'); 
+//     const uploadBtn = document.getElementById('uploadBtn'); 
+//     const successMessage = document.getElementById('successMessage'); 
+//     const addTodosBtn = document.getElementById('addTodosBtn'); 
+
+//     toggleFormBtn.addEventListener('click', function () { 
+//         if (addTodoFormContainer.classList.contains('hidden')) { 
+//             addTodoFormContainer.classList.remove('hidden'); 
+//             uploadFormContainer.classList.add('hidden'); 
+//             toggleFormBtn.textContent = 'Add Todos from File'; 
+//         } else { 
+//             addTodoFormContainer.classList.add('hidden'); 
+//             uploadFormContainer.classList.remove('hidden'); 
+//             toggleFormBtn.textContent = 'Go Back to form'; 
+//         } 
+//     }); 
+            
+//     uploadBtn.addEventListener('click', function () { 
+//         const fileInput = document.getElementById('fileInput'); 
+//         const file = fileInput.files[0]; 
+        
+//         if (file) { 
+//             const formData = new FormData(); 
+//             formData.append('file', file); 
+            
+//             fetch('/uploadfile/', { 
+//                 method: 'POST', 
+//                 body: formData 
+//             }) 
+//             .then(response => response.json()) 
+//             .then(data => { 
+//                 successMessage.classList.remove('hidden'); 
+//                 addTodosBtn.classList.remove('hidden'); 
+//             }) 
+//             .catch(error => { 
+//                 console.error('Error uploading file:', error); 
+//             }); 
+//         } else {
+//             alert("Please select a file to upload.");
+//         }
+//     }); 
+    
+//     addTodosBtn.addEventListener('click', function () { 
+//         fetch('/todos/add-from-file') 
+//         .then(response => response.json()) 
+//         .then(data => { 
+//             console.log(data.message); 
+//             window.location.reload(); // Reload the page to show the added todos
+//         }) 
+//         .catch(error => { 
+//             console.error('Error adding todos from file:', error); 
+//         }); 
+//     }); 
+// });
+
+
+
+// document.addEventListener('DOMContentLoaded', function () { 
+//     const toggleFormBtn = document.getElementById('toggleFormBtn'); 
+//     const addTodoFormContainer = document.getElementById('addTodoFormContainer'); 
+//     const uploadFormContainer = document.getElementById('uploadFormContainer'); 
+//     const uploadBtn = document.getElementById('uploadBtn'); 
+//     const successMessage = document.getElementById('successMessage'); 
+//     const addTodosBtn = document.getElementById('addTodosBtn'); 
+    
+//     toggleFormBtn.addEventListener('click', function () { 
+//         if (addTodoFormContainer.classList.contains('hidden')) { 
+//             addTodoFormContainer.classList.remove('hidden'); 
+//             uploadFormContainer.classList.add('hidden'); 
+//             toggleFormBtn.textContent = 'Add Todos from File'; 
+//         } else { 
+//             addTodoFormContainer.classList.add('hidden'); 
+//             uploadFormContainer.classList.remove('hidden'); 
+//             toggleFormBtn.textContent = 'Go Back to form'; 
+//         } 
+//     }); 
+            
+//     uploadBtn.addEventListener('click', function () { 
+//         const fileInput = document.getElementById('fileInput'); 
+//         const file = fileInput.files[0]; 
+        
+//         if (file) { 
+//             const formData = new FormData(); 
+//             formData.append('file', file); 
+            
+//             fetch('/uploadfile/', { 
+//                 method: 'POST', 
+//                 body: formData 
+//             }) 
+//             .then(response => response.json()) 
+//             .then(data => { 
+//                 successMessage.classList.remove('hidden'); 
+//                 addTodosBtn.classList.remove('hidden'); 
+//             }) 
+//             .catch(error => { 
+//                 console.error('Error uploading file:', error); 
+//             }); 
+//         } 
+//     }); 
+    
+//     addTodosBtn.addEventListener('click', function () { 
+//         fetch('/todos/add-from-file') 
+//         .then(response => response.json()) 
+//         .then(data => { 
+//             console.log(data.message); // window.reload(); 
+//             window.location.reload(); // Handle success, maybe reload todos or notify the user 
+//             }) 
+//             .catch(error => { 
+//                 console.error('Error adding todos from file:', error); 
+//             }); 
+//         }); 
+//     });
+
+
+document.addEventListener('DOMContentLoaded', function () { 
+    const toggleFormBtn = document.getElementById('toggleFormBtn'); 
+    const addTodoFormContainer = document.getElementById('addTodoFormContainer'); 
+    const uploadFormContainer = document.getElementById('uploadFormContainer'); 
+    const uploadBtn = document.getElementById('uploadBtn'); 
+    const successMessage = document.getElementById('successMessage'); 
+    const addTodosBtn = document.getElementById('addTodosBtn'); 
+
+    console.log('Document loaded, initializing event listeners');
+
+    // Toggle between forms
+    toggleFormBtn.addEventListener('click', function () { 
+        console.log('Toggle button clicked');
+        if (addTodoFormContainer.classList.contains('hidden')) { 
+            console.log('Showing Add Todo Form, hiding Upload Form');
+            addTodoFormContainer.classList.remove('hidden'); 
+            uploadFormContainer.classList.add('hidden'); 
+            toggleFormBtn.textContent = 'Upload from File'; 
+        } else { 
+            console.log('Hiding Add Todo Form, showing Upload Form');
+            addTodoFormContainer.classList.add('hidden'); 
+            uploadFormContainer.classList.remove('hidden'); 
+            toggleFormBtn.textContent = 'Go back to form'; 
+        } 
+    }); 
+            
+    // Upload file and show success message
+    uploadBtn.addEventListener('click', function () { 
+        const fileInput = document.getElementById('fileInput'); 
+        const file = fileInput.files[0]; 
+
+        console.log('Upload button clicked');
+        
+        if (file) { 
+            console.log('File selected:', file.name);
+            const formData = new FormData(); 
+            formData.append('file', file); 
+            
+            fetch('/uploadfile/', { 
+                method: 'POST', 
+                body: formData 
+            }) 
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => { 
+                console.log('File uploaded successfully');
+                successMessage.classList.remove('hidden'); 
+                addTodosBtn.classList.remove('hidden'); 
+            }) 
+            .catch(error => { 
+                console.error('Error uploading file:', error); 
+            }); 
+        } else {
+            alert("Please select a file to upload.");
+        }
+    }); 
+    
+    // Add Todos from file
+    addTodosBtn.addEventListener('click', function () { 
+        console.log('Add Todos button clicked');
+        fetch('/todos/add-from-file') 
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => { 
+            console.log('Todos added from file');
+            window.location.reload(); // Reload the page to show the added todos
+        }) 
+        .catch(error => { 
+            console.error('Error adding todos from file:', error); 
+        }); 
+    }); 
+});
