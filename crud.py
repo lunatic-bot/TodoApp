@@ -22,18 +22,27 @@ def authenticate_user(db: Session, email: str, password: str):
 
 
 # Create a new todo associated with a user
-def create_todo_for_user(db: Session, todo: schemas.TodoCreate, user_id: int):
-    db_todo = TodoItem(title=todo.title, description=todo.description, user_id=user_id)
+def create_todo_for_user(db: Session, title: str, description: str, user_id: int):
+    # Create an instance of the SQLAlchemy model
+    db_todo = TodoItem(
+        title=title,
+        description=description,
+        user_id=user_id
+    )
+    
+    # Add the model instance to the session
     db.add(db_todo)
+    
+    # Commit the transaction
     db.commit()
+    
+    # Refresh the instance to get any auto-generated fields like ID
     db.refresh(db_todo)
+    
+    # Convert the model instance to a Pydantic schema
     return db_todo
 
-    # db_todo = models.TodoItem(**todo.dict(), user_id=user_id)
-    # db.add(db_todo)
-    # db.commit()
-    # db.refresh(db_todo)
-    # return db_todo
+
 
 # Get todos for a specific user
 def get_todos_for_user(db: Session, user_id: int, skip: int = 0, limit: int = 10):

@@ -1,43 +1,23 @@
-// document.getElementById('todoForm').addEventListener('submit', function(event){
-//     event.preventDefault();
-//     const formData = new FormData(this);
-
-//     fetch('/todos/add-todo',{
-//         method: 'POST',
-//         body:formData
-//     })
-//     .then(response => response.json())
-//     .then(data => {
-//         console.log(data.message);
-//         window.location.reload();
-//     })
-//     .catch(error => {
-//         console.error("Error:", error)
-//     })
-// });
-
-document.getElementById('todoForm').addEventListener('submit', async function(event) {
+document.getElementById('addTodoForm').addEventListener('submit', async function(event) {
     event.preventDefault(); // Prevent the form from submitting the traditional way
 
     // Gather the form data
     const formData = new FormData(this);
-    const data = {
-        title: formData.get('title'),
-        description: formData.get('description')
-    };
 
-    // Get the authentication token
-    const token = localStorage.getItem('access_token'); // Adjust based on how you store the token
-    console.log('Token:', token);
     try {
+        // Convert FormData to URLSearchParams to send as form-encoded
+        const params = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+            params.append(key, value);
+        }
+
         // Send a POST request to the server
         const response = await fetch('/todos/add-todo', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Include the token in the Authorization header
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: JSON.stringify(data)
+            body: params
         });
 
         if (response.ok) {
@@ -48,7 +28,15 @@ document.getElementById('todoForm').addEventListener('submit', async function(ev
         } else {
             // Handle errors
             const errorData = await response.json();
-            alert(`Failed to add todo: ${errorData.detail || 'Unknown error'}`);
+            let errorMessage = 'Failed to add todo: ';
+            if (errorData.detail) {
+                errorMessage += errorData.detail;
+            } else if (errorData.errors) {
+                errorMessage += Object.values(errorData.errors).flat().join(', ');
+            } else {
+                errorMessage += 'Unknown error';
+            }
+            alert(errorMessage);
         }
     } catch (error) {
         // Handle network errors
@@ -58,9 +46,7 @@ document.getElementById('todoForm').addEventListener('submit', async function(ev
 });
 
 
-
-
-
+// delete todo
 function deleteTodo(todoId) {
     fetch(`/todos/delete-todo/${todoId}`, {
         method: 'DELETE',

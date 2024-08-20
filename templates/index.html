@@ -5,6 +5,7 @@
 {% block content %}
 <h1 class="mb-4">My Todos</h1>
 <div class="row">
+    <!-- Left Column: Display Todos -->
     <div class="col-md-8">
         {% for todo in todos %}
         <div class="card mb-3">
@@ -108,7 +109,27 @@
             </ul>
         </nav>
     </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Add New Todo</h5>
+            </div>
+            <div class="card-body">
+                <form id="addTodoForm" action="/todos/add-todo" method="post">
+                    <div class="form-group">
+                        <label for="newTitle">Title</label>
+                        <input type="text" class="form-control" id="newTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newDescription">Description</label>
+                        <textarea class="form-control" id="newDescription" name="description" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">Add Todo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
 </div>
 {% endblock %}
-
-

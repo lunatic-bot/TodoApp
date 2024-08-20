@@ -2,17 +2,20 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime
 
+
+#  Define the schemas
 class TodoBase(BaseModel):
     title: str
     description: str
     completed: bool = False
 
 class TodoCreate(TodoBase):
-    pass
+    user_id: int
 
 class TodoUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    completed: Optional[bool] = None
 
 class TodoResponse(TodoBase):
     id: int
@@ -22,9 +25,6 @@ class TodoResponse(TodoBase):
 
     class Config:
         orm_mode = True
-
-# TodoItem can be an alias for TodoResponse if both represent the same data structure.
-TodoItem = TodoResponse
 
 
 

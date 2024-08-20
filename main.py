@@ -4,8 +4,8 @@ from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from database import init_db, get_db
 import crud
-from schemas import TodoResponse, TodoCreate, TodoUpdate, UserCreate, UserResponse, Token
-from models import TodoItem, User
+from schemas import TodoResponse, TodoUpdate, UserResponse, Token
+from models import User
 
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -15,30 +15,24 @@ from starlette.requests import Request
 from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import RedirectResponse
 
-from pytz import timezone
-
-
-
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
+from datetime import timedelta
+from jose import jwt
 from passlib.context import CryptContext
 
 from auth import verify_password, get_password_hash
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
-
 import pandas as pd
 from io import StringIO
 import shutil
 
+from auth import create_access_token, get_current_user
+from fastapi.security import OAuth2PasswordBearer
+
 
 
 # from config import settings
-
-
 app = FastAPI()
 
 # Set up templates
@@ -53,42 +47,17 @@ init_db()
 ## USER ROUTES
 ##################################################################
 
-# JWT settings
+
 SECRET_KEY = "57168498522b9b42531f34be15dcd8d7e1a5fe14261c7d80e82cb9cdac26bd6b"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-from fastapi.security import OAuth2PasswordBearer
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# class TokenMiddleware(BaseHTTPMiddleware):
-#     async def dispatch(self, request: Request, call_next):
-#         token = request.cookies.get("access_token")
-#         if token:
-#             try:
-#                 token = token.replace("Bearer ", "")
-#                 payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#                 request.state.user = payload.get("sub")
-#             except jwt.ExpiredSignatureError:
-#                 request.state.user = None
-#             except jwt.InvalidTokenError:
-#                 request.state.user = None
-#         else:
-#             request.state.user = None
-        
-#         try:
-#             response = await call_next(request)
-#         except Exception as e:
-#             # Log the exception and optionally return a response
-#             print(f"Error in call_next: {e}")
-#             response = JSONResponse(content={"detail": "Internal Server Error"}, status_code=500)
-#         # response = await call_next(request)
-#         return response
 
-# app.add_middleware(TokenMiddleware)
 
 class TokenMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -118,44 +87,6 @@ class TokenMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(TokenMiddleware)
 #####################################################################################
-def get_current_user(request: Request, db: Session = Depends(get_db)):
-    print("GET CURRENT USER : ")
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        token = request.cookies.get("access_token")
-        if token:
-            token = token.replace("Bearer ", "")
-        else:
-            raise credentials_exception
-        
-        print("Token from cookie:", token)
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print("Payload:", payload)
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        
-        user = db.query(User).filter(User.email == username).first()
-        if user is None:
-            raise credentials_exception
-        return user
-    except JWTError:
-        raise credentials_exception
-
-
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone("Asia/Kolkata")) + expires_delta
-    else:
-        expire = datetime.now(timezone("Asia/Kolkata")) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
 
 
 @app.post("/users/signup", response_model=UserResponse)
@@ -195,19 +126,19 @@ def get_login_page(request: Request):
 
 
 @app.post("/token", response_model=Token)
-def login_for_access_token(
+def login_for_access_token(request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
     print("form dtaa", form_data.username, form_data.password)
     user = crud.authenticate_user(db, form_data.username, form_data.password)
     if not user:
-        print("Login failed: Incorrect username or password")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+        error_message = "Incorrect username or password"
+        return templates.TemplateResponse(
+            "login.html", 
+            {"request": request, "message": error_message, "message_type": "danger"}
         )
+    
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
@@ -231,7 +162,7 @@ async def redirect_to_home(request: Request):
 def get_login_page(request: Request):
     # Get the message from query parameters, if any
     message = request.query_params.get("message", "")
-    return templates.TemplateResponse("login.html", {"request": request, "message": message})
+    return templates.TemplateResponse("login.html", {"request": request, "message": message, "message_type": "info"})
     # return templates.TemplateResponse("login.html", {"request": request})    
 
 
@@ -249,9 +180,6 @@ def logout(request: Request):
 def read_todos(request: Request, skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     print("getting todos : ")
     print("Current user:", current_user)
-    # if isinstance(current_user, RedirectResponse):
-    #     print("Current user : ", current_user)
-    #     return current_user
 
     if not current_user:
         # Redirect to login page if not authenticated
@@ -270,17 +198,23 @@ def read_todos(request: Request, skip: int = 0, limit: int = 10, db: Session = D
         })
 
 
-
-@app.post("/todos/add-todo", tags=["Todos"])
-async def add_todo(request: Request, todo: TodoCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    # print("Create todo was called.")
+## add todo in database
+@app.post("/todos/add-todo", response_model=TodoResponse, tags=["Todos"])
+async def add_todo(
+    title: str = Form(...),
+    description: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     user = crud.get_user_by_mail(db, current_user.email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    db_todo = crud.create_todo_for_user(db=db, todo=todo, user_id=current_user.id)
-    return db_todo
-
+    try:
+        db_todo = crud.create_todo_for_user(db=db, title=title, description=description, user_id=current_user.id)
+        return db_todo
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) 
 
 
 @app.put("/todos/update-todo/{todo_id}", response_model=TodoResponse, tags=["Todos"])
@@ -319,16 +253,16 @@ def get_about(request : Request):
 
 
 
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    if exc.status_code == status.HTTP_404_NOT_FOUND:
-        return HTMLResponse(content=templates.get_template('404.html').render(), status_code=status.HTTP_404_NOT_FOUND)
-    # return await request.app.default_exception_handler(request, exc)
-    return {"request": request, "exception": exc}
+# @app.exception_handler(StarletteHTTPException)
+# async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+#     if exc.status_code == status.HTTP_404_NOT_FOUND:
+#         return HTMLResponse(content=templates.get_template('404.html').render(), status_code=status.HTTP_404_NOT_FOUND)
+#     # return await request.app.default_exception_handler(request, exc)
+#     return {"request": request, "exception": exc}
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return HTMLResponse(content="Invalid request", status_code=status.HTTP_400_BAD_REQUEST)
+# @app.exception_handler(RequestValidationError)
+# async def validation_exception_handler(request: Request, exc: RequestValidationError):
+#     return HTMLResponse(content="Invalid request", status_code=status.HTTP_400_BAD_REQUEST)
 
 
 
