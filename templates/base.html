@@ -12,7 +12,7 @@
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand text-white" href="/">Todo App</a>
+        <a class="navbar-brand text-white" href="{% if current_user %}/ {% else %}/users/login?message=Please%20log%20in%20to%20continue{% endif %}">Todo App</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -22,12 +22,6 @@
                     <a class="nav-link text-white" href="{% if current_user %}/ {% else %}/users/login?message=Please%20log%20in%20to%20continue{% endif %}">Home</a>
                 </li>
                 
-                <!-- <li class="nav-item">
-                    <a class="nav-link text-white" href="/users/login?message=Please%20log%20in%20to%20continue">Home</a>
-                </li>                 -->
-                <!-- <li class="nav-item">
-                    <a class="nav-link text-white" href="/">Home</a>
-                </li> -->
                 <li class="nav-item">
                     <a class="nav-link text-white" href="/about">About</a>
                 </li>
