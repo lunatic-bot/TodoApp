@@ -252,6 +252,10 @@ def get_about(request : Request):
 
 
 
+##
+
+
+
 
 # @app.exception_handler(StarletteHTTPException)
 # async def http_exception_handler(request: Request, exc: StarletteHTTPException):
