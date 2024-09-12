@@ -31,6 +31,8 @@ from auth import create_access_token, get_current_user
 from fastapi.security import OAuth2PasswordBearer
 
 
+from communication import send_email
+
 
 # from config import settings
 app = FastAPI()
@@ -90,7 +92,7 @@ app.add_middleware(TokenMiddleware)
 
 
 @app.post("/users/signup", response_model=UserResponse)
-def create_user(username: str = Form(...), email: str = Form(...), password: str = Form(...),
+async def create_user(username: str = Form(...), email: str = Form(...), password: str = Form(...),
     confirm_password: str = Form(...), db: Session = Depends(get_db)):
 
     if password != confirm_password:
@@ -114,6 +116,47 @@ def create_user(username: str = Form(...), email: str = Form(...), password: str
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # Email content
+    subject = "Welcome to the Todo App!"
+    body = f"""Hello {username},
+
+                We are excited to have you join our growing community at the Todo App! Your new account has been successfully created, and you are now part of a platform that helps you organize your tasks and achieve your goals effortlessly.
+
+                ### What can you do with the Todo App?
+
+                - **Create and Manage Tasks**: Easily create new tasks and keep track of your progress.
+                - **Set Deadlines and Priorities**: Stay on top of your tasks by setting due dates and priority levels.
+                - **Organize your Workflow**: Use categories and tags to organize your tasks in the way that works best for you.
+                - **Collaborate with Others**: Share tasks and collaborate with teammates, friends, or family members on group projects.
+
+                ### Getting Started
+
+                Here are a few quick steps to help you get started:
+                1. Log in to your account using the email and password you provided during registration.
+                2. Create your first task by clicking the 'Add Task' button on your dashboard.
+                3. Explore the settings section to customize the app based on your personal preferences.
+
+                ### Need Help?
+
+                If you need any assistance or have questions, feel free to reach out to our support team at support@todoapp.com. We’re here to help you make the most out of your experience.
+
+                Thank you once again for choosing the Todo App. We are committed to helping you stay organized and productive.
+
+                Best regards,
+                The Todo App Team
+
+                ---
+
+                Follow us on social media for updates and productivity tips:
+                - Twitter: @TodoApp
+                - Facebook: facebook.com/todoapp
+                - Instagram: @todoappofficial
+                """
+
+    # Send welcome email
+    await send_email(email, subject, body)
+
     # return new_user
     #  Redirect to the login page after successful signup
     return RedirectResponse(url='/users/login', status_code=302)
@@ -252,7 +295,7 @@ def get_about(request : Request):
 
 
 
-##
+
 
 
 
