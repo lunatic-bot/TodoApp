@@ -42,15 +42,9 @@ def create_todo_for_user(db: Session, title: str, description: str, user_id: int
     # Convert the model instance to a Pydantic schema
     return db_todo
 
-
-
 # Get todos for a specific user
 def get_todos_for_user(db: Session, user_id: int, skip: int = 0, limit: int = 10):
     return db.query(TodoItem).filter(TodoItem.user_id == user_id).offset(skip).limit(limit).all()
-
-
-
-
 
 def get_todo_by_id(db: Session, todo_id: int):
     return db.query(TodoItem).filter(TodoItem.id == todo_id).first()
@@ -59,6 +53,15 @@ def get_all_todos_for_user(db: Session, skip: int = 0, limit: int = 10, user_id:
     todos = db.query(TodoItem).filter(TodoItem.user_id == user_id).offset(skip).limit(limit).all()
     total_todos = db.query(TodoItem).filter(TodoItem.user_id == user_id).count()
     return todos, total_todos
+
+
+# def request_password_reset(db: Session, ):
+def get_user_by_token(db: Session, token: str):
+    return db.query(User).filter(User.reset_token == token).first()
+    
+    
+
+
 
 def create_todo(db: Session, title: str, description: str):
     db_todo = TodoItem(title=title, description=description)

@@ -50,5 +50,14 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+## user password reset 
+class ResetRequest(BaseModel):
+    email: str
+
+class PasswordResetForm(BaseModel):
+    token: str
+    new_password: str
+    confirm_password: str
+
 
 

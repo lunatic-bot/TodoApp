@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from database import init_db, get_db
 import crud
-from schemas import TodoResponse, TodoUpdate, UserResponse, Token
+from schemas import TodoResponse, TodoUpdate, UserResponse, Token, ResetRequest
 from models import User
 
 from fastapi.templating import Jinja2Templates
@@ -16,7 +16,8 @@ from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import RedirectResponse
 
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import timedelta
+from datetime import datetime, timedelta
+from pytz import timezone
 from jose import jwt
 from passlib.context import CryptContext
 
@@ -173,7 +174,7 @@ def login_for_access_token(request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    print("form dtaa", form_data.username, form_data.password)
+    # print("form dtaa", form_data.username, form_data.password)
     user = crud.authenticate_user(db, form_data.username, form_data.password)
     if not user:
         error_message = "Incorrect username or password"
@@ -293,6 +294,86 @@ def toggle_todo_completion(todo_id: int, db: Session = Depends(get_db)):
 def get_about(request : Request):
     return templates.TemplateResponse("about.html", {"request": request})
 
+
+
+from email_validator import validate_email, EmailNotValidError
+from utils import generate_reset_token
+from schemas import PasswordResetForm
+###################################################################################
+#USER PASSWORD RESET
+##################################################################################
+@app.post("/request-password-reset")
+async def request_password_reset(request: Request, email: str = Form(...), db:Session = Depends(get_db)):
+    print("This 1")
+    try:
+        email = validate_email(email).email
+    except EmailNotValidError as es:
+        # raise HTTPException(status_code=400, detail="Invalid email address")
+        error_message = "Invalid email address. Please enter a valid email."
+        return templates.TemplateResponse("request_password_reset.html", {"request": request, "error_message": error_message})
+
+    print("This 2")
+    db_user = crud.get_user_by_mail(db, email)
+    if not db_user:
+        # raise HTTPException(status_code=404, detail="User not found")
+        error_message = "Email not found. Please check the email address you entered."
+        return templates.TemplateResponse("request_password_reset.html", {"request": request, "error_message": error_message})
+    
+    print("This 3")
+    
+    
+    token = generate_reset_token()
+    expiration_time = datetime.now(timezone("Asia/Kolkata")) + timedelta(minutes=30)  # Set token to expire in 1 hour
+    
+    db_user.reset_token = token
+    db_user.reset_token_expiration = expiration_time
+    
+    # Save user changes to the database
+    db.commit()
+
+    # Send reset email
+    reset_link = f"http://localhost:8000/reset-password?token={token}"
+    await send_email(email, "Password Reset", f"Click the link to reset your password: {reset_link}")
+    
+    # return {"message": "Password reset link has been sent to your email."}
+    return templates.TemplateResponse("password_reset_response.html", {"request": request})
+
+
+
+
+@app.get("/request-password-reset", response_class=HTMLResponse)
+async def request_password_reset_form(request: Request):
+    return templates.TemplateResponse("request_password_reset.html", {"request": request})
+
+@app.get("/reset-password/", response_class=HTMLResponse)
+async def get_reset_password_form(token: str, request: Request):
+    return templates.TemplateResponse("reset_password.html", {"request": request, "token": token})
+
+@app.post("/reset-password/")
+async def reset_password(request: Request, token: str = Form(...), new_password: str = Form(...), confirm_password: str = Form(...), db: Session = Depends(get_db)):
+    #
+    if new_password != confirm_password:
+        raise HTTPException(
+            status_code=400,
+            detail="Passwords do not match"
+        )
+
+    # Find the user by the token
+    db_user = crud.get_user_by_token(db, token)
+
+    if not db_user:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+    
+    # Update the user's password and invalidate the token
+    db_user.hashed_password = get_password_hash(new_password)
+    db_user.reset_token = None 
+    db_user.reset_token_expiration = None
+    
+    # Send confirmation email
+    await send_email(db_user.email, "Password Changed", "Your password has been successfully changed. You can now login with your new password.")
+    
+    # return {"message": "Password has been successfully reset."}
+    return templates.TemplateResponse("password_reset_success.html", {"request": request})
 
 
 

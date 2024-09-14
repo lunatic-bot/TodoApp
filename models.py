@@ -13,7 +13,6 @@ class TodoItem(Base):
     completed = Column(Boolean, default=False)
     creation_time = Column(DateTime, default=datetime.now(timezone("Asia/Kolkata")))
     completion_time = Column(DateTime, nullable=True)
-    
     # New field to reference the User who owns this todo
     user_id = Column(Integer, ForeignKey("users.id"))
 
@@ -29,6 +28,10 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     creation_time = Column(DateTime, default=datetime.now(timezone("Asia/Kolkata")))
+
+    # password reset token and its expiration time
+    reset_token = Column(String, nullable=True)  
+    reset_token_expiration = Column(DateTime, nullable=True)  
 
     # Relationship with TodoItem
     todos = relationship("TodoItem", back_populates="owner", cascade="all, delete-orphan")
