@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from pytz import timezone
 from email_validator import validate_email, EmailNotValidError
 
-import app.crud as crud
+import app.crud.users as crud
 from app.core.templates import templates
 from app.db.database import get_db
 from app.core.auth import create_access_token, get_current_user, get_password_hash
@@ -19,6 +19,8 @@ from fastapi import APIRouter
 router = APIRouter()
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
 
 @router.post("/users/signup", response_model=UserResponse)
 async def create_user(username: str = Form(...), email: str = Form(...), password: str = Form(...),
@@ -37,45 +39,10 @@ async def create_user(username: str = Form(...), email: str = Form(...), passwor
     
     new_user = crud.create_user_in_db(db, username, email, password)
 
-    # Email content
-    subject = "Welcome to the Todo App!"
-    body = f"""Hello {username},
-
-                We are excited to have you join our growing community at the Todo App! Your new account has been successfully created, and you are now part of a platform that helps you organize your tasks and achieve your goals effortlessly.
-
-                ### What can you do with the Todo App?
-
-                - **Create and Manage Tasks**: Easily create new tasks and keep track of your progress.
-                - **Set Deadlines and Priorities**: Stay on top of your tasks by setting due dates and priority levels.
-                - **Organize your Workflow**: Use categories and tags to organize your tasks in the way that works best for you.
-                - **Collaborate with Others**: Share tasks and collaborate with teammates, friends, or family members on group projects.
-
-                ### Getting Started
-
-                Here are a few quick steps to help you get started:
-                1. Log in to your account using the email and password you provided during registration.
-                2. Create your first task by clicking the 'Add Task' button on your dashboard.
-                3. Explore the settings section to customize the app based on your personal preferences.
-
-                ### Need Help?
-
-                If you need any assistance or have questions, feel free to reach out to our support team at support@todoapp.com. We’re here to help you make the most out of your experience.
-
-                Thank you once again for choosing the Todo App. We are committed to helping you stay organized and productive.
-
-                Best regards,
-                The Todo App Team
-
-                ---
-
-                Follow us on social media for updates and productivity tips:
-                - Twitter: @TodoApp
-                - Facebook: facebook.com/todoapp
-                - Instagram: @todoappofficial
-                """
+    
 
     # Send welcome email
-    await send_email(email, subject, body)
+    await send_email("Welcome", username, email)
 
     # return new_user
     #  Redirect to the login page after successful signup
@@ -105,7 +72,7 @@ def login_for_access_token(request: Request,
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
 
-    response = RedirectResponse(url='/redirect-to-home', status_code=status.HTTP_302_FOUND)
+    response = RedirectResponse(url='/read-todos', status_code=status.HTTP_302_FOUND)
     response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
     print("Access token set in cookie:", access_token)
     return response
@@ -181,7 +148,7 @@ async def request_password_reset(request: Request, email: str = Form(...), db:Se
 
     # Send reset email
     reset_link = f"http://localhost:8000/reset-password?token={token}"
-    await send_email(email, "Password Reset", f"Click the link to reset your password: {reset_link}")
+    await send_email("Password_reset", db_user.username, db_user.email, reset_link)
     
     # return {"message": "Password reset link has been sent to your email."}
     return templates.TemplateResponse("password_reset_response.html", {"request": request})
@@ -216,7 +183,8 @@ async def reset_password(request: Request, token: str = Form(...), new_password:
     db_user.reset_token_expiration = None
     
     # Send confirmation email
-    await send_email(db_user.email, "Password Changed", "Your password has been successfully changed. You can now login with your new password.")
+    login_link = f"http://localhost:8000/users/login"
+    await send_email("Password_Changed", db_user.username, db_user.email, link=login_link)
     
     # return {"message": "Password has been successfully reset."}
     return templates.TemplateResponse("password_reset_success.html", {"request": request})

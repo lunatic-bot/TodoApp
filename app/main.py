@@ -10,9 +10,9 @@ app = FastAPI()
 # Mount the static files directory
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-app.include_router(users_router, prefix="/api", tags=["Users"])
-app.include_router(todos_router, prefix="/api", tags=["Todos"])
-app.include_router(others_router, prefix="/api", tags=["Others"])
+app.include_router(users_router, tags=["Users"])
+app.include_router(todos_router, tags=["Todos"])
+app.include_router(others_router, tags=["Others"])
 
 
 
