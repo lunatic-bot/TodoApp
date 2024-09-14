@@ -14,6 +14,9 @@ EMAIL_APP_PASS = os.getenv("EMAIL_PASS")
 
 # Set environment variables for email credentials
 
+SMTP_EMAIL = os.getenv("SMTP_EMAIL")
+# SMTP_PASSWORD = os.getenv("SMTP_MAIL_PASS")
+EMAIL_APP_PASS = os.getenv("EMAIL_APP_PASS_03")
 
 print(f"smtp envs : {SMTP_EMAIL} and {EMAIL_APP_PASS} ")
 
