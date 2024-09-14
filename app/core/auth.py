@@ -1,15 +1,16 @@
 # auth.py
 from passlib.context import CryptContext
-from database import get_db
+from app.db.database import get_db
 from fastapi import Depends, HTTPException, status
 from starlette.requests import Request
 from sqlalchemy.orm import Session
-from models import User
+from app.models.users import User
 from datetime import datetime, timedelta
 from pytz import timezone
 from jose import JWTError, jwt
+from fastapi.security import OAuth2PasswordBearer
 
-# Define the CryptContext for password hashing
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT settings

@@ -1,25 +1,15 @@
+import secrets
+import string
 import aiosmtplib
 from email.message import EmailMessage
-
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
-
-# SMTP_EMAIL = os.getenv("EMAIL")
-# EMAIL_APP_PASS = os.getenv("PASSWORD")
-
 SMTP_EMAIL = os.getenv("SMTP_EMAIL")
 EMAIL_APP_PASS = os.getenv("EMAIL_PASS")
 
-# Set environment variables for email credentials
-
-SMTP_EMAIL = os.getenv("SMTP_EMAIL")
-# SMTP_PASSWORD = os.getenv("SMTP_MAIL_PASS")
-EMAIL_APP_PASS = os.getenv("EMAIL_APP_PASS_03")
-
-print(f"smtp envs : {SMTP_EMAIL} and {EMAIL_APP_PASS} ")
-
+## function to generate password reset token 
+def generate_reset_token(length=32): 
+    chars = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
 # Function to send email
 async def send_email(email: str, subject: str, body: str):
