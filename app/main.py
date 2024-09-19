@@ -17,8 +17,11 @@ from app.api.users import router as users_router
 from app.api.todos import router as todos_router
 from app.api.others import router as others_router
 
+## user routes
 app.include_router(users_router, tags=["Users"])
+## todo routes
 app.include_router(todos_router, tags=["Todos"])
+## other routes
 app.include_router(others_router, tags=["Others"])
 
 
