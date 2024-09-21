@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.utlis.exception_handlers import http_exception_handler
+from starlette.middleware.sessions import SessionMiddleware
+import os
 
 # from config import settings
 app = FastAPI()
@@ -11,11 +13,13 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY"))
 
 
 from app.api.users import router as users_router
 from app.api.todos import router as todos_router
 from app.api.others import router as others_router
+from app.api.auth_routes import router as auth_router
 
 ## user routes
 app.include_router(users_router, tags=["Users"])
@@ -23,6 +27,8 @@ app.include_router(users_router, tags=["Users"])
 app.include_router(todos_router, tags=["Todos"])
 ## other routes
 app.include_router(others_router, tags=["Others"])
+
+app.include_router(auth_router)
 
 
 
