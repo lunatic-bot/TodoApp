@@ -51,7 +51,7 @@ async def add_todo(
     current_user: User = Depends(get_current_user)  # Inject the current user from auth
 ):
     # Fetch user data using the logged-in user's email
-    user = crud.get_user_by_mail(db, current_user.email)
+    user = crud_users.get_user_by_mail(db, current_user.email)
     
     # If user is not found, raise a 404 error
     if not user:

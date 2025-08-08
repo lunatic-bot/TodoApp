@@ -8,27 +8,35 @@ import os
 # from config import settings
 app = FastAPI()
 
-# Mount the static files directory
+# Static Files Configuration
+# Serves static files (CSS, JavaScript, images) from the app/static directory
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-
+# Global Exception & Middleware Configuration
+# Handle HTTP exceptions across the application
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+# Enable session handling with secret key from environment variables
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY"))
 
-
+# Import API Routers
+# Each router handles a specific domain of the application
 from app.api.users import router as users_router
 from app.api.todos import router as todos_router
 from app.api.others import router as others_router
 from app.api.auth_routes import router as auth_router
 
-## user routes
+# Router Registration
+# Group API endpoints by domain for better organization
+# Users API endpoints
 app.include_router(users_router, tags=["Users"])
-## todo routes
+# Todo management endpoints
 app.include_router(todos_router, tags=["Todos"])
-## other routes
+# Miscellaneous endpoints
 app.include_router(others_router, tags=["Others"])
-
+# Authentication endpoints (no explicit tag for auth routes)
 app.include_router(auth_router)
+
+
 
 
 
