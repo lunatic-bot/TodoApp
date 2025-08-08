@@ -3,3 +3,4 @@ structure.txt
 config.py
 .env
 __pycache__/
+.vscode
