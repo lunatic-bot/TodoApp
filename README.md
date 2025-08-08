@@ -1,4 +1,3 @@
-````markdown
 # FastAPI TodoApp
 
 The **FastAPI Todo App** is a robust task management application built with the FastAPI framework. It is designed to help users efficiently organize and track their tasks with a clean and intuitive interface. The app supports user authentication, task management, and secure access to user-specific tasks.
@@ -69,7 +68,6 @@ Follow these steps to set up and run the app locally:
 git clone <repository-url>
 cd ToDoApp
 ```
-````
 
 ### 2. Create and Activate Virtual Environment
 
@@ -123,10 +121,8 @@ http://127.0.0.1:8000
   - You’re running from the **project root** directory.
   - You use the correct `uvicorn` command: `uvicorn app.main:app --reload`
 
+- Make sure there are no typos in folder or file names like `utlis` (should be `utils`).
+
 ---
 
 Happy coding! 🎯
-
-```
-
-```
