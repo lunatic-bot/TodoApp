@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base  # Import base class for
 Base = declarative_base()
 
 # URL for connecting to the SQLite database (file-based)
-SQLALCHEMY_DATABASE_URL = "sqlite:///C:/Users/atalb/Documents/Coding/FastAPI/ToDoApp/todo.db"  # Path to your SQLite database file
+SQLALCHEMY_DATABASE_URL = "sqlite:////home/site/wwwroot/app/db.sqlite3"#"sqlite:///C:/Users/atalb/Documents/Coding/FastAPI/ToDoApp/todo.db"  # Path to your SQLite database file
 
 # Create the SQLAlchemy engine with the provided database URL.
 # 'check_same_thread=False' is required for SQLite in multi-threaded environments.
