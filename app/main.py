@@ -44,7 +44,6 @@ from app.api.auth_routes import router as auth_router
 
 # Router Registration
 # Group API endpoints by domain for better organization
-# Users API endpoints
 app.include_router(users_router, tags=["Users"])
 # Todo management endpoints
 app.include_router(todos_router, tags=["Todos"])
