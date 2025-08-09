@@ -5,18 +5,35 @@ from app.utlis.exception_handlers import http_exception_handler
 from starlette.middleware.sessions import SessionMiddleware
 import os
 
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+
 # from config import settings
 app = FastAPI()
 
+app.mount(
+    "/static",
+    StaticFiles(directory=BASE_DIR / "static"),
+    name="static"
+)
+
+
 # Static Files Configuration
 # Serves static files (CSS, JavaScript, images) from the app/static directory
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Global Exception & Middleware Configuration
 # Handle HTTP exceptions across the application
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 # Enable session handling with secret key from environment variables
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY"))
+
+session_secret = os.getenv("SESSION_SECRET_KEY")
+if not session_secret:
+    raise RuntimeError("SESSION_SECRET_KEY environment variable not set!")
+app.add_middleware(SessionMiddleware, secret_key=session_secret)
 
 # Import API Routers
 # Each router handles a specific domain of the application
