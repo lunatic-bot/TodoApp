@@ -34,14 +34,8 @@ jobs:
         with:
           name: python-app
           path: |
-            ./
-            !antenv/
-            !.venv/
-            !.git/
-            !__pycache__/
-            !*.pyc
-            !*.pyo
-            !*.db
+            ./app
+            requirements.txt
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -68,3 +62,4 @@ jobs:
           app-name: 'todo-app'
           slot-name: 'Production'
           package: .
+
