@@ -20,9 +20,13 @@ app.mount(
     name="static"
 )
 
-
 import os
+import sys 
+
 print("Current working directory:", os.getcwd())
+print("Python path:", sys.path)
+print("Files in cwd:", os.listdir(os.getcwd()))
+print("Files in app folder:", os.listdir(os.path.join(os.getcwd(), "app")))
 
 # Static Files Configuration
 # Serves static files (CSS, JavaScript, images) from the app/static directory
