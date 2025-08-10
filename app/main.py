@@ -21,6 +21,9 @@ app.mount(
 )
 
 
+import os
+print("Current working directory:", os.getcwd())
+
 # Static Files Configuration
 # Serves static files (CSS, JavaScript, images) from the app/static directory
 # app.mount("/static", StaticFiles(directory="app/static"), name="static")
