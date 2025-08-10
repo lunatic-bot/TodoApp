@@ -15,7 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -58,3 +57,14 @@ jobs:
 
       - name: Login to Azure
         uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CAE0F4F9C85543CD80549B964ACBD1BB }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E37B0A18B79840C0968B19717F31FCB7 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E48DFF83A19443F080089C348E0C3B72 }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'todo-app'
+          slot-name: 'Production'
+          package: .
