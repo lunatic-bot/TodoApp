@@ -48,6 +48,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
+          path: .
+
+      - name: List downloaded files (debug)
+        run: ls -R .
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -62,4 +66,5 @@ jobs:
           app-name: 'todo-app'
           slot-name: 'Production'
           package: .
+
 
