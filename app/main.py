@@ -28,6 +28,7 @@ import os
 import sys 
 
 
+print("base dir: ", BASE_DIR)
 print("Python path:", sys.path)
 print("Current working directory:", os.getcwd())
 print("Files in cwd:", os.listdir(os.getcwd()))
