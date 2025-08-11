@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from authlib.integrations.starlette_client import OAuth
 from starlette.config import Config
 from starlette.responses import RedirectResponse
-from app.core.config import oauth  # import oauth from your config
+from ..core.config import oauth  # import oauth from your config
 from app.crud.users import create_user_in_db
 from sqlalchemy.orm import Session
 from app.db.database import get_db
