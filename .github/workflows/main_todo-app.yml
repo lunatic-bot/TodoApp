@@ -7,27 +7,63 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # Checkout source code
+      - uses: actions/checkout@v4
 
+      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install dependencies (optional for Azure build)
+      # Install dependencies (optional for build verification)
+      - name: Install dependencies
         run: |
           python -m venv antenv
           source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-        # You can remove the above step if you want Azure to build itself
 
+      # Upload all necessary files for deployment
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            ./
+            !antenv/
+            !.venv/
+            !__pycache__/
+            !.git/
+            !.github/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # Download artifact from build step
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
+          path: .
+
+      # Debug: list files that will be deployed
+      - name: List downloaded files
+        run: ls -R .
+
+      # Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -35,6 +71,7 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E37B0A18B79840C0968B19717F31FCB7 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E48DFF83A19443F080089C348E0C3B72 }}
 
+      # Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
