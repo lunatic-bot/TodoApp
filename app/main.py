@@ -7,25 +7,21 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.utlis.exception_handlers import http_exception_handler
 from starlette.middleware.sessions import SessionMiddleware
-import os
-
-import os
+from app.db.database import Base, engine
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
 
-
 # from config import settings
 app = FastAPI()
-
 app.mount(
     "/static",
     StaticFiles(directory=BASE_DIR / "static"),
     name="static"
 )
-
-import os
-import sys 
 
 
 print("base dir: ", BASE_DIR)
@@ -42,6 +38,18 @@ print("Files in app folder:", os.listdir(os.path.join(os.getcwd(), "app")))
 # Handle HTTP exceptions across the application
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 # Enable session handling with secret key from environment variables
+
+
+
+@app.on_event("startup")
+async def startup_event():
+    try:
+        logger.info("Checking database schema...")
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables ensured.")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+
 
 session_secret = os.getenv("SESSION_SECRET_KEY")
 if not session_secret:

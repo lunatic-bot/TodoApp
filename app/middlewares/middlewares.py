@@ -2,9 +2,10 @@ from starlette.middleware.base import BaseHTTPMiddleware  # Import base class fo
 from starlette.requests import Request  # Import Request class to handle incoming requests
 from starlette.responses import JSONResponse  # Import JSONResponse to handle error responses
 import jwt  # type: ignore # Import JWT for token decoding and validation
+import os
 
 # JWT settings
-SECRET_KEY = "57168498522b9b42531f34be15dcd8d7e1a5fe14261c7d80e82cb9cdac26bd6b"  # Secret key for signing JWTs
+SECRET_KEY = os.getenv('SESSION_SECRET_KEY')  # Secret key for signing JWTs
 ALGORITHM = "HS256"  # Algorithm used to sign and verify JWT
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # Token expiration time
 
