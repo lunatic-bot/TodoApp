@@ -6,7 +6,7 @@ import os
 
 from app.core.templates import templates
 
-SMTP_EMAIL = os.getenv("SMTP_EMAIL")
+SMTP_EMAIL = os.getenv("EMAIL")
 EMAIL_APP_PASS = os.getenv("EMAIL_PASS")
 
 ## function to generate password reset token 
@@ -35,8 +35,10 @@ EMAIL_TEMPLATES = {
     "Password_Changed" : "password_changed_email.html"
 }
 
+localhost = "http://localhost:8000/"
+
 # Function to send email
-async def send_email(email_type, username, email: str, link:str = "http://localhost:8000/"):
+async def send_email(email_type, username, email: str, link:str = "https://todo-app-hvhna0g3gka4ewc6.canadacentral-01.azurewebsites.net/"):
     context = {
         "username": username,
         "link": link
