@@ -25,31 +25,63 @@ router = APIRouter()
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-# Route to handle user signup (POST method)
-@router.post("/users/signup", response_model=UserResponse)
-async def create_user(
-    username: str = Form(...),  # Collecting username from form data
-    email: str = Form(...),  # Collecting email from form data
-    password: str = Form(...),  # Collecting password from form data
-    confirm_password: str = Form(...),  # Collecting confirmation password
-    db: Session = Depends(get_db)  # Injecting database session dependency
-):
-    # If the passwords do not match, raise an HTTP 400 error
-    if password != confirm_password:
-        raise HTTPException(status_code=400, detail="Passwords do not match")
+# # Route to handle user signup (POST method)
+# @router.post("/users/signup", response_model=UserResponse)
+# async def create_user(
+#     username: str = Form(...),  # Collecting username from form data
+#     email: str = Form(...),  # Collecting email from form data
+#     password: str = Form(...),  # Collecting password from form data
+#     confirm_password: str = Form(...),  # Collecting confirmation password
+#     db: Session = Depends(get_db)  # Injecting database session dependency
+# ):
+#     # If the passwords do not match, raise an HTTP 400 error
+#     if password != confirm_password:
+#         raise HTTPException(status_code=400, detail="Passwords do not match")
 
-    # Check if a user with the provided email already exists
+#     # Check if a user with the provided email already exists
+#     db_user = db.query(User).filter(User.email == email).first()
+#     if db_user:
+#         raise HTTPException(status_code=400, detail="Email already registered")
+    
+#     # Create a new user in the database using the CRUD function
+#     new_user = crud.create_user_in_db(db, username, email, password)
+    
+#     # Send a welcome email after successful signup
+#     await send_email("Welcome", username, email)
+
+#     # Redirect the user to the login page after signup
+#     return RedirectResponse(url='/users/login', status_code=302)
+
+
+
+@router.post("/users/signup", response_class=HTMLResponse)
+async def create_user(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    # Password mismatch
+    if password != confirm_password:
+        return templates.TemplateResponse(
+            "signup.html",
+            {"request": request, "error": "Passwords do not match", "username": username, "email": email}
+        )
+
+    # Email exists
     db_user = db.query(User).filter(User.email == email).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    # Create a new user in the database using the CRUD function
+        return templates.TemplateResponse(
+            "signup.html",
+            {"request": request, "error": "This email is already registered. Please log in.", "username": username}
+        )
+
+    # Create new user
     new_user = crud.create_user_in_db(db, username, email, password)
-    
-    # Send a welcome email after successful signup
     await send_email("Welcome", username, email)
 
-    # Redirect the user to the login page after signup
     return RedirectResponse(url='/users/login', status_code=302)
 
 
