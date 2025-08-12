@@ -5,8 +5,19 @@ from sqlalchemy.ext.declarative import declarative_base  # Import base class for
 # Base class for all database models. All models will inherit from this.
 Base = declarative_base()
 
+
+import os
+
+if os.getenv("WEBSITE_SITE_NAME"):  # running in Azure
+    db_path = "/home/db/db.sqlite3"
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+else:  # local dev
+    db_path = os.path.join(os.path.dirname(__file__), "db.sqlite3")
+
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
+
 # URL for connecting to the SQLite database (file-based)
-SQLALCHEMY_DATABASE_URL = "sqlite:////home/site/wwwroot/app/db.sqlite3"#"sqlite:///C:/Users/atalb/Documents/Coding/FastAPI/ToDoApp/todo.db"  # Path to your SQLite database file
+# SQLALCHEMY_DATABASE_URL = "sqlite:////home/site/wwwroot/app/db.sqlite3"#"sqlite:///C:/Users/atalb/Documents/Coding/FastAPI/ToDoApp/todo.db"  # Path to your SQLite database file
 
 # Create the SQLAlchemy engine with the provided database URL.
 # 'check_same_thread=False' is required for SQLite in multi-threaded environments.
