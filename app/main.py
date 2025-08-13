@@ -24,11 +24,11 @@ app.mount(
 )
 
 
-print("base dir: ", BASE_DIR)
-print("Python path:", sys.path)
-print("Current working directory:", os.getcwd())
-print("Files in cwd:", os.listdir(os.getcwd()))
-print("Files in app folder:", os.listdir(os.path.join(os.getcwd(), "app")))
+# print("base dir: ", BASE_DIR)
+# print("Python path:", sys.path)
+# print("Current working directory:", os.getcwd())
+# print("Files in cwd:", os.listdir(os.getcwd()))
+# print("Files in app folder:", os.listdir(os.path.join(os.getcwd(), "app")))
 
 # Static Files Configuration
 # Serves static files (CSS, JavaScript, images) from the app/static directory
@@ -38,8 +38,6 @@ print("Files in app folder:", os.listdir(os.path.join(os.getcwd(), "app")))
 # Handle HTTP exceptions across the application
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 # Enable session handling with secret key from environment variables
-
-
 
 @app.on_event("startup")
 async def startup_event():
