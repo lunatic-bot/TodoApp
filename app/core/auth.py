@@ -9,6 +9,7 @@ from datetime import datetime, timedelta  # Importing datetime utilities for tim
 from pytz import timezone  # Importing timezone utilities for time zone handling
 from jose import JWTError, jwt  # Importing JWT (JSON Web Token) utilities for token creation and verification
 from fastapi.security import OAuth2PasswordBearer  # Importing OAuth2PasswordBearer for token authentication
+import os
 
 # OAuth2 scheme for token-based authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -17,7 +18,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT settings
-SECRET_KEY = "57168498522b9b42531f34be15dcd8d7e1a5fe14261c7d80e82cb9cdac26bd6b"  # Secret key used for signing JWTs
+SECRET_KEY = os.getenv("SESSION_SECRET_KEY")  # Secret key used for signing JWTs
 ALGORITHM = "HS256"  # Algorithm used for encoding JWTs
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # Access token expiration time in minutes
 

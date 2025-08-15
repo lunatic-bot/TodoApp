@@ -13,6 +13,7 @@ router = APIRouter()
 @router.get("/auth/google")
 async def login_via_google(request: Request):
     redirect_uri = request.url_for('auth_callback')
+    print('redirect URI : ',redirect_uri)
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 # OAuth callback endpoint
